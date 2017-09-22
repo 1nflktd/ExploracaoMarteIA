@@ -5,7 +5,8 @@ type App struct {
 }
 
 func (a *App) Run() {
+	initLimpaTela()
 	a.ambiente = Ambiente{}
 	a.ambiente.Init()
-	a.ambiente.PrintMapa()
+	a.ambiente.Run()
 }

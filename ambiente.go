@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 )
 
 const TamanhoMapa = 20
@@ -17,7 +18,7 @@ type Ambiente struct {
 	mapa [TamanhoMapa][TamanhoMapa]Caracter
 	pedras []Posicao
 	diamantes []Posicao
-	agente Agente
+	agentes []*Agente
 	base Posicao
 }
 
@@ -47,7 +48,10 @@ func (a *Ambiente) Init() {
 
 	// coloca agente (aleatorio)
 	a.mapa[4][4] = C_Agente
-	a.agente.setPosicaoXY(4, 4)
+	agente1 := &Agente{}
+	agente1.Init(a.base)
+	agente1.setPosicaoXY(4, 4)
+	a.agentes = append(a.agentes, agente1)
 }
 
 func (a *Ambiente) PrintMapa() {
@@ -57,4 +61,29 @@ func (a *Ambiente) PrintMapa() {
 		}
 		fmt.Printf("\n")
 	}
+}
+
+func (a *Ambiente) Run() {
+	// laco ate encontrar todos os diamantes
+	for {
+		limpaTela()
+		a.PrintMapa()
+		a.moveAgentes()
+
+		time.Sleep(1 * time.Second)
+	}
+}
+
+func (a *Ambiente) moveAgentes() {
+	for _, ag := range a.agentes {
+		posAtual := ag.getPosicao()
+		a.mapa[posAtual.X][posAtual.Y] = C_Vazio
+		p_ag := ag.moveAleatorio()
+		// verificaColisao(p_ag)
+		a.mapa[p_ag.X][p_ag.Y] = C_Agente
+	}
+}
+
+func (a *Ambiente) verificaColisao(posAgente Posicao) {
+
 }
