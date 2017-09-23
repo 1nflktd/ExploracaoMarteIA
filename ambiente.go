@@ -12,7 +12,6 @@ const TamanhoMapa = 15
 type Caracter string
 var C_Diamante Caracter = "*"
 var C_Pedra Caracter = "#"
-var C_Agente Caracter = "o"
 var C_Base Caracter = "B"
 var C_Vazio Caracter = " "
 
@@ -60,9 +59,9 @@ func (a *Ambiente) Init(nDiamantes, nPedras, nAgentes int) {
 	for i := 0; i < nAgentes; {
 		p1, p2 := r.Intn(TamanhoMapa), r.Intn(TamanhoMapa)
 		if a.mapa[p1][p2] == C_Vazio {
-			a.mapa[p1][p2] = C_Agente
 			agente1 := &Agente{}
-			agente1.Init(a.base)
+			agente1.Init(a.base, Caracter(rune(i) + 'a'))
+			a.mapa[p1][p2] = agente1.getCaracter()
 			agente1.setPosicaoXY(p1, p2)
 			a.agentes = append(a.agentes, agente1)
 			i++
@@ -81,8 +80,8 @@ func (a *Ambiente) PrintMapa() {
 }
 
 func (a *Ambiente) PrintInfo() {
-	for i, ag := range a.agentes {
-		fmt.Printf("Agente %d:...", i)
+	for _, ag := range a.agentes {
+		fmt.Printf("Agente %s:...", ag.getCaracter())
 		if ag.getTemDiamante() {
 			fmt.Printf("Tem diamante. Voltando para base\n")
 		} else {
@@ -138,7 +137,7 @@ func (a *Ambiente) moveAgentes() {
 					mutexMapa.Lock()
 					a.mapa[posAtual.X][posAtual.Y] = C_Vazio
 					agente.setPosicao(p_ag) // move o elemento
-					a.mapa[p_ag.X][p_ag.Y] = C_Agente
+					a.mapa[p_ag.X][p_ag.Y] = agente.getCaracter()
 					mutexMapa.Unlock()
 				}
 			} else if caracter == C_Base {

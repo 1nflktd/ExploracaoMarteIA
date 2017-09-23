@@ -9,10 +9,12 @@ type Agente struct {
 	posicao Posicao
 	base Posicao
 	temDiamante bool
+	caracter Caracter
 }
 
-func (a *Agente) Init(base Posicao) {
+func (a *Agente) Init(base Posicao, caracter Caracter) {
 	a.base = base
+	a.caracter = caracter
 }
 
 func (a *Agente) setPosicao(p Posicao) {
@@ -33,6 +35,10 @@ func (a *Agente) setTemDiamante(temDiamante bool) {
 
 func (a *Agente) getTemDiamante() bool {
 	return a.temDiamante
+}
+
+func (a *Agente) getCaracter() Caracter {
+	return a.caracter
 }
 
 // Nao muda o estado do objeto
