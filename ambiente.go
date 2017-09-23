@@ -3,9 +3,10 @@ package main
 import (
 	"fmt"
 	"time"
+	"math/rand"
 )
 
-const TamanhoMapa = 20
+const TamanhoMapa = 10
 
 type Caracter string
 var C_Diamante Caracter = "*"
@@ -33,15 +34,28 @@ func (a *Ambiente) Init() {
 	a.base = Posicao{0, 0}
 	a.mapa[0][0] = C_Base
 
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+
 	// coloca diamantes (aleatorio)
-	a.diamantes++
-	a.mapa[5][7] = C_Diamante
-	a.diamantes++
-	a.mapa[9][15] = C_Diamante
+	nDiamantes := 5 // vem por parametro
+	for i := 0; i < nDiamantes; {
+		p1, p2 := r.Intn(TamanhoMapa), r.Intn(TamanhoMapa)
+		if a.mapa[p1][p2] == C_Vazio {
+			a.diamantes++
+			a.mapa[p1][p2] = C_Diamante
+			i++
+		}
+	}
 
 	// coloca pedras (aleatorio)
-	a.mapa[4][17] = C_Pedra
-	a.mapa[8][10] = C_Pedra
+	nPedras := 5 // vem por parametro
+	for i := 0; i < nPedras; {
+		p1, p2 := r.Intn(TamanhoMapa), r.Intn(TamanhoMapa)
+		if a.mapa[p1][p2] == C_Vazio {
+			a.mapa[p1][p2] = C_Pedra
+			i++
+		}
+	}
 
 	// coloca agente (aleatorio)
 	a.mapa[4][4] = C_Agente
