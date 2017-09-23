@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"time"
 	"math/rand"
+	"sync"
 )
 
-const TamanhoMapa = 10
+const TamanhoMapa = 15
 
 type Caracter string
 var C_Diamante Caracter = "*"
@@ -22,7 +23,7 @@ type Ambiente struct {
 	base Posicao
 }
 
-func (a *Ambiente) Init() {
+func (a *Ambiente) Init(nDiamantes, nPedras, nAgentes int) {
 	// inicia todos em branco
 	for i := 0; i < TamanhoMapa; i++ {
 		for w := 0; w < TamanhoMapa; w++ {
@@ -37,7 +38,6 @@ func (a *Ambiente) Init() {
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	// coloca diamantes (aleatorio)
-	nDiamantes := 5 // vem por parametro
 	for i := 0; i < nDiamantes; {
 		p1, p2 := r.Intn(TamanhoMapa), r.Intn(TamanhoMapa)
 		if a.mapa[p1][p2] == C_Vazio {
@@ -48,7 +48,6 @@ func (a *Ambiente) Init() {
 	}
 
 	// coloca pedras (aleatorio)
-	nPedras := 5 // vem por parametro
 	for i := 0; i < nPedras; {
 		p1, p2 := r.Intn(TamanhoMapa), r.Intn(TamanhoMapa)
 		if a.mapa[p1][p2] == C_Vazio {
@@ -58,11 +57,18 @@ func (a *Ambiente) Init() {
 	}
 
 	// coloca agente (aleatorio)
-	a.mapa[4][4] = C_Agente
-	agente1 := &Agente{}
-	agente1.Init(a.base)
-	agente1.setPosicaoXY(4, 4)
-	a.agentes = append(a.agentes, agente1)
+	for i := 0; i < nAgentes; {
+		p1, p2 := r.Intn(TamanhoMapa), r.Intn(TamanhoMapa)
+		if a.mapa[p1][p2] == C_Vazio {
+			a.mapa[p1][p2] = C_Agente
+			agente1 := &Agente{}
+			agente1.Init(a.base)
+			agente1.setPosicaoXY(p1, p2)
+			a.agentes = append(a.agentes, agente1)
+			i++
+		}
+	}
+
 }
 
 func (a *Ambiente) PrintMapa() {
@@ -101,36 +107,52 @@ func (a *Ambiente) Run() {
 }
 
 func (a *Ambiente) moveAgentes() {
+	qtdeAgentes := len(a.agentes)
+	agentes := make(chan bool, qtdeAgentes)
+	mutexMapa := &sync.Mutex{}
 	for _, ag := range a.agentes {
-		posAtual := ag.getPosicao()
-		var p_ag Posicao
-		if ag.getTemDiamante() {
-			p_ag = ag.voltaBase()
-		} else {
-			p_ag = ag.movePosAleatorio()
-		}
+		go func(agente *Agente) {
+			posAtual := agente.getPosicao()
+			var p_ag Posicao
+			if agente.getTemDiamante() {
+				p_ag = agente.voltaBase()
+			} else {
+				p_ag = agente.movePosAleatorio()
+			}
 
-		if ok, caracter := a.verificaColisao(p_ag); ok {
-			atualizarPos := true
-			if caracter == C_Diamante {
-				if ag.getTemDiamante() { // ja tem diamante, pula
-					atualizarPos = false
-				} else {
-					ag.setTemDiamante(true)
+			mutexMapa.Lock()
+			ok, caracter := a.verificaColisao(p_ag)
+			mutexMapa.Unlock()
+
+			if ok {
+				atualizarPos := true
+				if caracter == C_Diamante {
+					if agente.getTemDiamante() { // ja tem diamante, pula
+						atualizarPos = false
+					} else {
+						agente.setTemDiamante(true)
+					}
+				}
+
+				if atualizarPos {
+					mutexMapa.Lock()
+					a.mapa[posAtual.X][posAtual.Y] = C_Vazio
+					agente.setPosicao(p_ag) // move o elemento
+					a.mapa[p_ag.X][p_ag.Y] = C_Agente
+					mutexMapa.Unlock()
+				}
+			} else if caracter == C_Base {
+				if agente.getTemDiamante() {
+					agente.setTemDiamante(false)
+					a.diamantes--
 				}
 			}
+			agentes <- true
+		}(ag)
+	}
 
-			if atualizarPos {
-				a.mapa[posAtual.X][posAtual.Y] = C_Vazio
-				ag.setPosicao(p_ag) // move o elemento
-				a.mapa[p_ag.X][p_ag.Y] = C_Agente
-			}
-		} else if caracter == C_Base {
-			if ag.getTemDiamante() {
-				ag.setTemDiamante(false)
-				a.diamantes--
-			}
-		}
+	for i := 0; i < qtdeAgentes; i++ {
+		<-agentes
 	}
 }
 
