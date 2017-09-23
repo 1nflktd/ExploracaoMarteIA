@@ -16,8 +16,7 @@ var C_Vazio Caracter = " "
 
 type Ambiente struct {
 	mapa [TamanhoMapa][TamanhoMapa]Caracter
-	pedras []Posicao
-	diamantes []Posicao
+	diamantes int
 	agentes []*Agente
 	base Posicao
 }
@@ -35,15 +34,13 @@ func (a *Ambiente) Init() {
 	a.mapa[0][0] = C_Base
 
 	// coloca diamantes (aleatorio)
-	a.diamantes = append(a.diamantes, Posicao{5, 7})
+	a.diamantes++
 	a.mapa[5][7] = C_Diamante
-	a.diamantes = append(a.diamantes, Posicao{9, 15})
+	a.diamantes++
 	a.mapa[9][15] = C_Diamante
 
 	// coloca pedras (aleatorio)
-	a.pedras = append(a.pedras, Posicao{4, 17})
 	a.mapa[4][17] = C_Pedra
-	a.pedras = append(a.pedras, Posicao{8, 10})
 	a.mapa[8][10] = C_Pedra
 
 	// coloca agente (aleatorio)
@@ -63,27 +60,71 @@ func (a *Ambiente) PrintMapa() {
 	}
 }
 
+func (a *Ambiente) PrintInfo() {
+	for i, ag := range a.agentes {
+		fmt.Printf("Agente %d:...", i)
+		if ag.getTemDiamante() {
+			fmt.Printf("Tem diamante. Voltando para base\n")
+		} else {
+			fmt.Printf("Procurando diamantes\n")
+		}
+	}
+}
+
 func (a *Ambiente) Run() {
 	// laco ate encontrar todos os diamantes
 	for {
 		limpaTela()
 		a.PrintMapa()
+		a.PrintInfo()
 		a.moveAgentes()
-
-		time.Sleep(1 * time.Second)
+		if a.diamantes == 0 {
+			break
+		}
+		time.Sleep(100 * time.Millisecond)
 	}
+	fmt.Printf("Todos diamantes foram encontrados e levados para a base!\n")
 }
 
 func (a *Ambiente) moveAgentes() {
 	for _, ag := range a.agentes {
 		posAtual := ag.getPosicao()
-		a.mapa[posAtual.X][posAtual.Y] = C_Vazio
-		p_ag := ag.moveAleatorio()
-		// verificaColisao(p_ag)
-		a.mapa[p_ag.X][p_ag.Y] = C_Agente
+		var p_ag Posicao
+		if ag.getTemDiamante() {
+			p_ag = ag.voltaBase()
+		} else {
+			p_ag = ag.movePosAleatorio()
+		}
+
+		if ok, caracter := a.verificaColisao(p_ag); ok {
+			atualizarPos := true
+			if caracter == C_Diamante {
+				if ag.getTemDiamante() { // ja tem diamante, pula
+					atualizarPos = false
+				} else {
+					ag.setTemDiamante(true)
+				}
+			}
+
+			if atualizarPos {
+				a.mapa[posAtual.X][posAtual.Y] = C_Vazio
+				ag.setPosicao(p_ag) // move o elemento
+				a.mapa[p_ag.X][p_ag.Y] = C_Agente
+			}
+		} else if caracter == C_Base {
+			if ag.getTemDiamante() {
+				ag.setTemDiamante(false)
+				a.diamantes--
+			}
+		}
 	}
 }
 
-func (a *Ambiente) verificaColisao(posAgente Posicao) {
-
+func (a *Ambiente) verificaColisao(posAgente Posicao) (bool, Caracter) {
+	c := a.mapa[posAgente.X][posAgente.Y]
+	if c == C_Diamante || c == C_Vazio {
+		return true, c
+	} else {
+		return false, c
+	}
 }

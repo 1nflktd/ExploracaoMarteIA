@@ -8,6 +8,7 @@ import (
 type Agente struct {
 	posicao Posicao
 	base Posicao
+	temDiamante bool
 }
 
 func (a *Agente) Init(base Posicao) {
@@ -26,28 +27,53 @@ func (a *Agente) getPosicao() Posicao {
 	return a.posicao
 }
 
-func (a *Agente) moveAleatorio() Posicao {
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-
-	if a.posicao.X >= (TamanhoMapa - 1) {
-		a.posicao.X--
-	} else if a.posicao.X == 0 {
-		a.posicao.X++
-	} else {
-		a.posicao.X += (r.Intn(2) - 1) // random de 0 a 2, se 0 volta uma (-1), 1 fica parado, 2 avanca
-	}
-
-	if a.posicao.Y >= (TamanhoMapa - 1) {
-		a.posicao.Y--
-	} else if a.posicao.Y == 0 {
-		a.posicao.Y++
-	} else {
-		a.posicao.Y += (r.Intn(2) - 1) // random de 0 a 2, se 0 volta uma (-1), 1 fica parado, 2 avanca
-	}
-
-	return a.posicao
+func (a *Agente) setTemDiamante(temDiamante bool) {
+	a.temDiamante = temDiamante
 }
 
-func (a *Agente) voltaBase() {
+func (a *Agente) getTemDiamante() bool {
+	return a.temDiamante
+}
 
+// Nao muda o estado do objeto
+func (a *Agente) movePosAleatorio() Posicao {
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	pos := a.posicao
+
+	if pos.X >= (TamanhoMapa - 1) {
+		pos.X--
+	} else if pos.X == 0 {
+		pos.X++
+	} else {
+		pos.X += (r.Intn(3) - 1) // random de 0 a 2, se 0 volta uma (-1), 1 fica parado, 2 avanca
+	}
+
+	if pos.Y >= (TamanhoMapa - 1) {
+		pos.Y--
+	} else if pos.Y == 0 {
+		pos.Y++
+	} else {
+		pos.Y += (r.Intn(3) - 1) // random de 0 a 2, se 0 volta uma (-1), 1 fica parado, 2 avanca
+	}
+
+	return pos
+}
+
+func (a *Agente) voltaBase() Posicao {
+	// por enquanto base = 0, 0 -> #todo base aleatoria
+	pos := a.posicao
+
+	if pos.X == 0 {
+		pos.X++
+	} else {
+		pos.X--
+	}
+
+	if pos.Y == 0 {
+		pos.Y++
+	} else {
+		pos.Y--
+	}
+
+	return pos
 }
