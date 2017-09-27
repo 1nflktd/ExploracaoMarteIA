@@ -16,7 +16,7 @@ func initLimpaTela() {
         cmd.Run()
     }
     mFuncOS["windows"] = func() {
-        cmd := exec.Command("cls")
+        cmd := exec.Command("cmd", "/c", "cls")
         cmd.Stdout = os.Stdout
         cmd.Run()
     }
