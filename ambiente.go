@@ -90,7 +90,7 @@ func (a *Ambiente) PrintInfo() {
 	}
 }
 
-func (a *Ambiente) Run() {
+func (a *Ambiente) Run(milissegundos int) {
 	// laco ate encontrar todos os diamantes
 	for {
 		limpaTela()
@@ -100,7 +100,7 @@ func (a *Ambiente) Run() {
 		if a.diamantes == 0 {
 			break
 		}
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(time.Duration(milissegundos) * time.Millisecond)
 	}
 	fmt.Printf("Todos diamantes foram encontrados e levados para a base!\n")
 }
