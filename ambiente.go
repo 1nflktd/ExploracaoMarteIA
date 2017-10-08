@@ -5,6 +5,7 @@ import (
 	"time"
 	"math/rand"
 	"sync"
+	"net/http"
 )
 
 const TamanhoMapa = 15
@@ -15,14 +16,20 @@ var C_Pedra Caracter = "#"
 var C_Base Caracter = "B"
 var C_Vazio Caracter = " "
 
+type AmbienteTela struct {
+	Mapa [TamanhoMapa][TamanhoMapa]Caracter
+}
+
 type Ambiente struct {
 	mapa [TamanhoMapa][TamanhoMapa]Caracter
 	diamantes int
 	agentes []*Agente
 	base Posicao
+	w http.ResponseWriter
 }
 
-func (a *Ambiente) Init(nDiamantes, nPedras, nAgentes int) {
+func (a *Ambiente) Init(w http.ResponseWriter, nDiamantes, nPedras, nAgentes int) {
+	a.w = w
 	// inicia todos em branco
 	for i := 0; i < TamanhoMapa; i++ {
 		for w := 0; w < TamanhoMapa; w++ {
@@ -71,12 +78,7 @@ func (a *Ambiente) Init(nDiamantes, nPedras, nAgentes int) {
 }
 
 func (a *Ambiente) PrintMapa() {
-	for i := 0; i < TamanhoMapa; i++ {
-		for w := 0; w < TamanhoMapa; w++ {
-			fmt.Printf(string(a.mapa[i][w]))
-		}
-		fmt.Printf("\n")
-	}
+	executeTemplate(a.w, AmbienteTela{Mapa: a.mapa})
 }
 
 func (a *Ambiente) PrintInfo() {
@@ -90,17 +92,17 @@ func (a *Ambiente) PrintInfo() {
 	}
 }
 
-func (a *Ambiente) Run(milissegundos int) {
+func (a *Ambiente) Run() {
 	// laco ate encontrar todos os diamantes
 	for {
-		limpaTela()
+		//limpaTela()
 		a.PrintMapa()
-		a.PrintInfo()
+		//a.PrintInfo()
 		a.moveAgentes()
 		if a.diamantes == 0 {
 			break
 		}
-		time.Sleep(time.Duration(milissegundos) * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 	}
 	fmt.Printf("Todos diamantes foram encontrados e levados para a base!\n")
 }

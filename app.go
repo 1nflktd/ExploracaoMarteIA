@@ -1,12 +1,15 @@
 package main
 
+import (
+	"net/http"
+)
+
 type App struct {
 	ambiente Ambiente
 }
 
-func (a *App) Run(nDiamantes, nPedras, nAgentes, milissegundos int) {
-	initLimpaTela()
+func (a *App) Run(w http.ResponseWriter, nDiamantes, nPedras, nAgentes int) {
 	a.ambiente = Ambiente{}
-	a.ambiente.Init(nDiamantes, nPedras, nAgentes)
-	a.ambiente.Run(milissegundos)
+	a.ambiente.Init(w, nDiamantes, nPedras, nAgentes)
+	a.ambiente.Run()
 }
